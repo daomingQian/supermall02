@@ -1,6 +1,7 @@
 <template>
     <div class="detail" v-if="iid">
         <detail-nav-bar @myEvent="jump" ref="navBar"></detail-nav-bar>
+		<success v-show="showSuccess"></success>
         <scroll :probe="probe" ref="scroll" @scroll="scroll">
             <template>
                 <detail-swiper :topImages="topImages"></detail-swiper>
@@ -12,7 +13,7 @@
                 <goods-list :list="recommend" @loadEnd="loadEnd" ref="recommend"></goods-list>
             </template>
         </scroll>
-        <detail-bottom></detail-bottom>
+        <detail-bottom @addShop='addShop'></detail-bottom>
         <back-top v-show="isShowBackTop" @click.native="backTop"></back-top>
     </div>
 </template>
@@ -27,9 +28,12 @@
     import DetailRate from "./detailRate/DetailRate";
     import GoodsList from "components/content/goods/GoodsList";
     import DetailBottom from "./detailBottomBar/DetailBottomBar";
+	import Success from "./detailCart/success.vue"
 
     import {backTopMixin} from "components/commen/utils/mixins.js"
     import {getDetail,GoodsInfo,getRecommend} from "network/detail.js"
+	
+	import {mapState, mapMutations} from 'vuex'
     export default {
         name: "Detail",
         data(){
@@ -46,7 +50,9 @@
                 themeTopYs: [0],
                 probe: 3,
                 currentIndex: 0,
-                y: 0
+                y: 0,
+				shopCart: {},
+				showSuccess: false
             }
         },
         components: {
@@ -58,20 +64,23 @@
             DetailItemParams,
             DetailRate,
             GoodsList,
-            DetailBottom
+            DetailBottom,
+			Success
         },
         methods: {
             //每张图片加载结束执行  加上防抖操作  刷新可滑动尺寸
             loadEnd(){
                 clearTimeout(this.timer)
                 this.timer = setTimeout(()=>{
-                    this.$refs.scroll.fresh()
-                    this.themeTopYs.slice(0,1)
+					if(this.$refs.scroll){
+						this.$refs.scroll.fresh()
+					}
+					//向themeTopYs添加位置信息
+                    this.themeTopYs = [0]
                     this.themeTopYs.push(this.$refs.params.$el.offsetTop)
                     this.themeTopYs.push(this.$refs.rate.$el.offsetTop)
                     this.themeTopYs.push(this.$refs.recommend.$el.offsetTop)
                     this.themeTopYs.push(Number.MAX_VALUE)
-                    this.themeTopYs.slice(0,5)
                 },200)
             },
             // 请求网路数据
@@ -97,7 +106,7 @@
             jump(index){
                 this.$refs.scroll.backTop(0,-this.themeTopYs[index],200)
             },
-            //在滚动时
+            //滚轮在滚动时
             scroll(position){
                 this.y = -position.y
                 for(let i = 0; i<this.themeTopYs.length-1; i++){
@@ -112,8 +121,32 @@
                 }else {
                     this.isShowBackTop = false
                 }
-            }
+            },
+			// 点击加入购物车
+			addShop(){
+				this.shopCart.image = this.topImages[0],
+				this.shopCart.title = this.goodsInfo.title
+				this.shopCart.desc = this.goodsInfo.desc
+				this.shopCart.price = this.goodsInfo.price
+				this.shopCart.iid = this.iid
+				this.shopCart.is_checked = true
+				this.cartList(this.shopCart)
+				
+				setTimeout(()=>{
+					this.showSuccess = true
+					
+				},0)
+				setTimeout(()=>{
+					this.showSuccess = false
+				},1000)
+				
+			},
+			...mapMutations(['cartList'])
+			
         },
+		computed:{
+			...mapState(["listShop"])
+		},
         mixins: [backTopMixin],
         created() {
             this.iid = this.$route.params.iid

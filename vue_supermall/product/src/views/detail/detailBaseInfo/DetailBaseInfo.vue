@@ -1,6 +1,6 @@
 <template>
     <div class="baseInfo">
-        <p>{{goodsInfo.desc}}</p>
+        <p>{{goodsInfo.title}}</p>
         <span class="price">{{goodsInfo.price}}</span>
         <span class="oldPrice">{{goodsInfo.oldPrice}}</span>
         <span class="discount" :class="{bc:goodsInfo.discount}">{{goodsInfo.discount}}</span>

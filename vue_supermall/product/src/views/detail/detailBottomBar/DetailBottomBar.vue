@@ -14,7 +14,7 @@
                 <p>收藏</p>
             </li>
         </ul>
-        <div class="middle">
+        <div class="middle" @click="addShop">
             加入购物车
         </div>
         <div class="right">
@@ -25,7 +25,12 @@
 
 <script>
     export default {
-        name: "DetailBottomBar"
+        name: "DetailBottomBar",
+        methods: {
+            addShop(){
+				this.$emit("addShop")
+            }
+        }
     }
 </script>
 
